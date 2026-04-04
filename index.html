@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabla Periódica del Golf — Club de Golf La Dehesa</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; min-height: 100vh; padding: 1rem; }
+
+header { text-align: center; margin-bottom: 1rem; }
+header h1 { font-size: 22px; font-weight: 700; color: #1a1a18; margin-bottom: 4px; }
+header p { font-size: 13px; color: #888780; }
+header .club { font-size: 12px; color: #639922; font-weight: 600; margin-top: 5px; letter-spacing: 0.5px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 1rem; }
+.leg-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #5F5E5A; background: #fff; border: 0.5px solid #D3D1C7; border-radius: 6px; padding: 3px 7px; }
+.leg-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+  gap: 3px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.cell {
+  border-radius: 5px;
+  padding: 4px 2px 3px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.cell:hover, .cell:active { transform: scale(1.1); z-index: 10; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
+.cell .num { font-size: 8px; opacity: 0.65; align-self: flex-start; padding-left: 3px; }
+.cell .sym { font-size: 13px; font-weight: 700; line-height: 1; }
+.cell .name { font-size: 6px; text-align: center; line-height: 1.2; margin-top: 1px; }
+.empty { opacity: 0; pointer-events: none; }
+
+.mobile-view { display: none; }
+.cat-section { margin-bottom: 1.2rem; }
+.cat-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; padding: 4px 10px; border-radius: 6px; display: inline-block; }
+.mobile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.mobile-cell {
+  border-radius: 8px; padding: 8px 4px 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 0.5px solid transparent; min-height: 64px;
+  -webkit-tap-highlight-color: transparent; transition: transform 0.1s;
+}
+.mobile-cell:active { transform: scale(0.95); }
+.mobile-cell .num { font-size: 9px; opacity: 0.6; align-self: flex-start; padding-left: 4px; }
+.mobile-cell .sym { font-size: 18px; font-weight: 700; line-height: 1.1; }
+.mobile-cell .name { font-size: 8px; text-align: center; line-height: 1.3; margin-top: 2px; }
+
+.cat-shots   { background: #E6F1FB; border-color: #85B7EB; color: #0C447C; }
+.cat-equip   { background: #EAF3DE; border-color: #97C459; color: #27500A; }
+.cat-campo   { background: #E1F5EE; border-color: #5DCAA5; color: #085041; }
+.cat-score   { background: #FAEEDA; border-color: #EF9F27; color: #633806; }
+.cat-jugador { background: #EEEDFE; border-color: #AFA9EC; color: #3C3489; }
+.cat-rules   { background: #FAECE7; border-color: #F0997B; color: #4A1B0C; }
+.cat-mental  { background: #FBEAF0; border-color: #ED93B1; color: #4B1528; }
+.cat-tour    { background: #F1EFE8; border-color: #B4B2A9; color: #2C2C2A; }
+
+.title-shots   { background: #E6F1FB; color: #0C447C; }
+.title-equip   { background: #EAF3DE; color: #27500A; }
+.title-campo   { background: #E1F5EE; color: #085041; }
+.title-score   { background: #FAEEDA; color: #633806; }
+.title-jugador { background: #EEEDFE; color: #3C3489; }
+.title-rules   { background: #FAECE7; color: #4A1B0C; }
+.title-mental  { background: #FBEAF0; color: #4B1528; }
+.title-tour    { background: #F1EFE8; color: #2C2C2A; }
+
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  align-items: center; justify-content: center; z-index: 100; padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; border: 0.5px solid #D3D1C7;
+  padding: 1.6rem 1.4rem; max-width: 340px; width: 100%;
+  position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: #f5f4f0; border: none; cursor: pointer;
+  font-size: 16px; color: #888780; width: 30px; height: 30px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.modal-sym { font-size: 52px; font-weight: 700; line-height: 1; }
+.modal-name { font-size: 22px; font-weight: 700; margin: 6px 0 3px; color: #1a1a18; }
+.modal-cat { font-size: 12px; margin-bottom: 12px; color: #888780; }
+.modal-desc { font-size: 15px; color: #444441; line-height: 1.65; }
+.modal-fact { margin-top: 12px; font-size: 13px; color: #888780; border-top: 0.5px solid #D3D1C7; padding-top: 12px; }
+.modal-fact span { font-weight: 600; color: #2C2C2A; }
+
+footer { text-align: center; margin-top: 1.2rem; font-size: 12px; color: #B4B2A9; }
+footer strong { color: #639922; }
+
+@media (max-width: 680px) {
+  .desktop-view { display: none; }
+  .mobile-view { display: block; }
+  header h1 { font-size: 19px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛳ Tabla Periódica del Golf</h1>
+  <p>72 elementos esenciales. Toca cualquiera para conocerlo.</p>
+  <p class="club">Club de Golf La Dehesa</p>
+</header>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#B5D4F4"></div> Golpes</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#C0DD97"></div> Equipo</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#9FE1CB"></div> Campo</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#FAC775"></div> Puntuación</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#CECBF6"></div> Jugador</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#F5C4B3"></div> Reglas</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#F4C0D1"></div> Mental</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#D3D1C7"></div> Tour</div>
+</div>
+
+<div class="desktop-view">
+  <div class="grid" id="grid-desktop"></div>
+</div>
+
+<div class="mobile-view" id="mobile-view"></div>
+
+<footer>
+  <p>Creado por <strong>Club de Golf La Dehesa</strong> · golfladehesa.es</p>
+</footer>
+
+<div class="modal-overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-close" id="closeBtn">✕</button>
+    <div class="modal-sym" id="mSym"></div>
+    <div class="modal-name" id="mName"></div>
+    <div class="modal-cat" id="mCat"></div>
+    <div class="modal-desc" id="mDesc"></div>
+    <div class="modal-fact" id="mFact"></div>
+  </div>
+</div>
+
+<script>
+const elements = [
+  {n:1,sym:"Dr",name:"Drive",cat:"shots",col:1,row:1,desc:"El golpe inaugural de cada hoyo. La potencia máxima del juego.",fact:"Récord: 515 m por Mike Austin (1974)"},
+  {n:2,sym:"H1",name:"Hoyo en 1",cat:"score",col:18,row:1,desc:"El golpe más preciado del golf: la bola directamente al hoyo desde el tee.",fact:"Probabilidad para amateur: 1 en 12.500"},
+  {n:3,sym:"Ea",name:"Eagle",cat:"score",col:1,row:2,desc:"Dos golpes bajo par en un hoyo. Raro y celebrado.",fact:"Solo el 1% de los amateurs lo logra alguna vez"},
+  {n:4,sym:"Bi",name:"Birdie",cat:"score",col:2,row:2,desc:"Un golpe bajo par. La moneda de cambio del golf.",fact:"Los pros promedian 4-5 birdies por ronda"},
+  {n:5,sym:"Pa",name:"Par",cat:"score",col:13,row:2,desc:"El número de golpes esperados para completar un hoyo.",fact:"Suma de pares de un campo = 72 en torneos"},
+  {n:6,sym:"Bg",name:"Bogey",cat:"score",col:14,row:2,desc:"Un golpe sobre par. El resultado más común del jugador medio.",fact:"La palabra viene del 'bogey man', figura mítica inglesa"},
+  {n:7,sym:"Db",name:"Doble Bogey",cat:"score",col:15,row:2,desc:"Dos sobre par. Cuando el hoyo no coopera.",fact:"Llamado 'snowman' si es en un hoyo par 6"},
+  {n:8,sym:"Hc",name:"Handicap",cat:"jugador",col:16,row:2,desc:"El sistema que iguala a jugadores de distinto nivel.",fact:"El WHS se aplica en más de 100 países"},
+  {n:9,sym:"Al",name:"Albatros",cat:"score",col:17,row:2,desc:"Tres bajo par. Una de las mayores hazañas del golf.",fact:"Gene Sarazen en 1935: el 'tiro escuchado en el mundo'"},
+  {n:10,sym:"Co",name:"Condor",cat:"score",col:18,row:2,desc:"Cuatro bajo par. Prácticamente un mito del golf.",fact:"Solo 4 registrados en la historia oficial"},
+  {n:11,sym:"Pt",name:"Putter",cat:"equip",col:1,row:3,desc:"El palo del green. Responsable del 40% de los golpes.",fact:"Hay más de 10.000 diseños de putter en el mercado"},
+  {n:12,sym:"Wd",name:"Wood",cat:"equip",col:2,row:3,desc:"Los palos de distancia. El 3-wood es el aliado del fairway.",fact:"Los woods modernos no llevan madera desde los 80s"},
+  {n:13,sym:"Ir",name:"Hierro",cat:"equip",col:3,row:3,desc:"Del 3 al 9, los palos versátiles del approach.",fact:"Un set completo lleva hasta 14 palos permitidos"},
+  {n:14,sym:"We",name:"Wedge",cat:"equip",col:4,row:3,desc:"Los palos de precisión: SW, GW, LW, PW.",fact:"El loft de un lob wedge puede llegar a 64°"},
+  {n:15,sym:"Hy",name:"Híbrido",cat:"equip",col:5,row:3,desc:"El cruce entre madera y hierro. Salvavidas de los amateurs.",fact:"Inventado en los 90s, hoy lo usan el 80% de los jugadores"},
+  {n:16,sym:"Bo",name:"Bola",cat:"equip",col:6,row:3,desc:"El elemento central del juego. 392-421 hoyuelos por bola.",fact:"Una bola Pro V1 tiene 392 hoyuelos perfectamente simétricos"},
+  {n:17,sym:"Gu",name:"Guante",cat:"equip",col:7,row:3,desc:"Agarre y control. Solo en la mano izquierda (diestros).",fact:"Phil Mickelson, zurdo, juega sin guante izquierdo"},
+  {n:18,sym:"Sp",name:"Spikes",cat:"equip",col:8,row:3,desc:"Los tacos del zapato de golf. Tracción sobre la hierba.",fact:"Los spikes metálicos fueron prohibidos en muchos campos"},
+  {n:19,sym:"Bk",name:"Bag",cat:"equip",col:9,row:3,desc:"La bolsa que carga los 14 palos.",fact:"Un bag tour lleno puede pesar más de 25 kg"},
+  {n:20,sym:"Te",name:"Tee",cat:"equip",col:10,row:3,desc:"El pequeño palo que sostiene la bola al inicio. Icono del golf.",fact:"Dr. George Grant lo patentó en 1899"},
+  {n:21,sym:"Ra",name:"Rastrillo",cat:"campo",col:11,row:3,desc:"La herramienta del bunker. Dejar el arena como al principio.",fact:"El reglamento exige rastrillar siempre tras pisar un bunker"},
+  {n:22,sym:"Bp",name:"Birdie Putt",cat:"shots",col:12,row:3,desc:"El putt que entra para birdie. El mejor sonido del green.",fact:"Estadística clave en el putting ranking del PGA Tour"},
+  {n:23,sym:"Ch",name:"Chip",cat:"shots",col:13,row:3,desc:"Golpe corto de aproximación. Poca altura, mucho rodamiento.",fact:"La regla del 80/20: 80% rodadura, 20% vuelo"},
+  {n:24,sym:"Pi",name:"Pitch",cat:"shots",col:14,row:3,desc:"Aproximación con altura. La bola sube y para rápido.",fact:"Requiere open face y swing en V"},
+  {n:25,sym:"Pu",name:"Putt",cat:"shots",col:15,row:3,desc:"El golpe sobre el green hacia el hoyo.",fact:"El promedio de putts por ronda en el PGA Tour es 28,5"},
+  {n:26,sym:"Bu",name:"Bunker",cat:"campo",col:16,row:3,desc:"El obstáculo de arena. Temido por muchos, amado por pocos.",fact:"Augusta tiene 44 bunkers estratégicamente colocados"},
+  {n:27,sym:"Ro",name:"Rough",cat:"campo",col:17,row:3,desc:"La hierba alta fuera del fairway.",fact:"El rough en majors puede llegar a 10 cm de largo"},
+  {n:28,sym:"Fw",name:"Fairway",cat:"campo",col:18,row:3,desc:"La autopista verde entre tee y green. Donde quieres estar.",fact:"Un fairway medio mide entre 30 y 50 metros de ancho"},
+  {n:29,sym:"Gr",name:"Green",cat:"campo",col:1,row:4,desc:"La superficie perfecta donde vive el hoyo. El destino sagrado.",fact:"Los greens de Augusta se mantienen al 12-13 en el Stimpmeter"},
+  {n:30,sym:"Ho",name:"Hoyo",cat:"campo",col:2,row:4,desc:"El objetivo final. 10,8 cm de diámetro, 10,16 cm de profundidad.",fact:"El tamaño del hoyo fue estandarizado en 1891 en St Andrews"},
+  {n:31,sym:"Ob",name:"OB",cat:"rules",col:3,row:4,desc:"Out of Bounds. Más allá de las estacas blancas: penalización.",fact:"Penalidad: 1 golpe + distancia (regla 18)"},
+  {n:32,sym:"Hz",name:"Hazard",cat:"rules",col:4,row:4,desc:"Zonas de penalización: rojas y amarillas. El agua es la más temida.",fact:"Las estacas rojas permiten alivio lateral sin cruzar la línea"},
+  {n:33,sym:"Dp",name:"Drop",cat:"rules",col:5,row:4,desc:"Soltar la bola desde la altura de la rodilla en zona de alivio.",fact:"Hasta 2019 se soltaba desde el hombro. El cambio fue polémico"},
+  {n:34,sym:"Cd",name:"Caddie",cat:"jugador",col:6,row:4,desc:"El consejero de confianza. Carga el bag y lee los greens.",fact:"Un caddie del Tour puede ganar hasta el 10% del prize money"},
+  {n:35,sym:"Pr",name:"Pro",cat:"jugador",col:7,row:4,desc:"El jugador profesional. Sacrificio, talento y dedicación total.",fact:"Solo 125 jugadores mantienen la tarjeta del PGA Tour cada año"},
+  {n:36,sym:"Am",name:"Amateur",cat:"jugador",col:8,row:4,desc:"El jugador sin retribución económica. El alma del golf.",fact:"El título amateur es tan prestigioso como muchos pro"},
+  {n:37,sym:"Gf",name:"Golfista",cat:"jugador",col:9,row:4,desc:"El ser humano que decide perseguir una bola pequeña por campos enormes.",fact:"Hay 66 millones de golfistas en el mundo"},
+  {n:38,sym:"Cp",name:"Capitán",cat:"jugador",col:10,row:4,desc:"El capitán del equipo. Ryder Cup, Presidents Cup. Máximo honor.",fact:"Ser capitán de la Ryder Cup es lo más alto del golf amateur"},
+  {n:39,sym:"Mk",name:"Marker",cat:"rules",col:11,row:4,desc:"La moneda o marca que señala la posición de la bola en el green.",fact:"Obligatorio usar marker cuando un compañero pide marcar"},
+  {n:40,sym:"Sm",name:"Stimpmeter",cat:"campo",col:12,row:4,desc:"El instrumento que mide la velocidad del green.",fact:"Greens de 9: normales. De 13+: élite de tour. 15: casi imposible"},
+  {n:41,sym:"Dl",name:"Dogleg",cat:"campo",col:13,row:4,desc:"El hoyo que gira como una pata de perro. Estrategia obligada.",fact:"Dogleg derecho: ventaja para los slicers. Izquierdo: para los hookers"},
+  {n:42,sym:"Ln",name:"Línea",cat:"shots",col:14,row:4,desc:"La lectura del green. Ver la pendiente antes del putt.",fact:"Los mejores caddies ven 3-4 metros de ruptura que el pro ignora"},
+  {n:43,sym:"Bs",name:"Backspin",cat:"shots",col:15,row:4,desc:"La magia del wedge: la bola cae y retrocede.",fact:"Requiere un lie limpio, grooves afilados y swing descendente"},
+  {n:44,sym:"Dw",name:"Draw",cat:"shots",col:16,row:4,desc:"La trayectoria curva de derecha a izquierda. El golpe favorito de los pros.",fact:"Un draw bien ejecutado gana entre 5 y 15 metros frente al fade"},
+  {n:45,sym:"Fd",name:"Fade",cat:"shots",col:17,row:4,desc:"La curva suave de izquierda a derecha. El golpe de control.",fact:"Nicklaus y Trevino dominaron el juego con un fade perfecto"},
+  {n:46,sym:"Fl",name:"Flop Shot",cat:"shots",col:18,row:4,desc:"La delicadeza máxima: alta, suave y que para cerca.",fact:"Phil Mickelson lo convirtió en arte. Riesgo altísimo, recompensa total"},
+  {n:47,sym:"Sl",name:"Slice",cat:"shots",col:1,row:5,desc:"La pesadilla del amateur: la bola se va muy a la derecha.",fact:"El 90% de los amateurs sufre slice de forma crónica"},
+  {n:48,sym:"Hk",name:"Hook",cat:"shots",col:2,row:5,desc:"El golpe que se escapa a la izquierda. Hermano mayor del draw.",fact:"Los pros tienen más miedo al hook que al slice"},
+  {n:49,sym:"Sh",name:"Shank",cat:"shots",col:3,row:5,desc:"El golpe temido. La bola sale por el hosel perpendicular.",fact:"Se le llama 'la palabra de cuatro letras del golf'"},
+  {n:50,sym:"Ps",name:"Putt Stroke",cat:"shots",col:4,row:5,desc:"El movimiento pendular que decide los torneos.",fact:"Dave Pelz estudió miles de putts: el arco es inevitablemente mejor"},
+  {n:51,sym:"Sw",name:"Swing Plane",cat:"shots",col:5,row:5,desc:"El plano imaginario del swing. La obsesión de los pros.",fact:"Ben Hogan lo describió magistralmente con su 'pane of glass'"},
+  {n:52,sym:"Im",name:"Impact",cat:"shots",col:6,row:5,desc:"El momento cero. Todo el swing existe para este instante.",fact:"El contacto dura menos de 0,5 milisegundos"},
+  {n:53,sym:"Ft",name:"Follow Through",cat:"shots",col:7,row:5,desc:"La terminación del swing. El espejo de lo que ocurrió antes.",fact:"Un finish alto indica un swing ascendente y potente"},
+  {n:54,sym:"Gp",name:"Grip",cat:"shots",col:8,row:5,desc:"La conexión entre manos y palo. La base de todo.",fact:"Vardon, interlock o 10 dedos: tres escuelas, una verdad"},
+  {n:55,sym:"St",name:"Stance",cat:"shots",col:9,row:5,desc:"La posición de los pies. La arquitectura del golpe.",fact:"Ancho de hombros para hierros, algo más para el driver"},
+  {n:56,sym:"Ali",name:"Alineación",cat:"shots",col:10,row:5,desc:"Apuntar correctamente. El error más frecuente y silencioso.",fact:"El 70% de los amateurs apunta sistemáticamente a la derecha"},
+  {n:57,sym:"Rt",name:"Rotación",cat:"shots",col:11,row:5,desc:"La cadera manda el swing. Hombros y brazos la siguen.",fact:"Una cadera que rota 45° antes que los hombros = potencia máxima"},
+  {n:58,sym:"Tp",name:"Tempo",cat:"mental",col:12,row:5,desc:"El ritmo del swing. No hay potencia sin tempo.",fact:"Freddie Couples y Ernie Els: el tempo más envidiado del golf"},
+  {n:59,sym:"Fo",name:"Focus",cat:"mental",col:13,row:5,desc:"La concentración en el punto clave. El secreto de los grandes.",fact:"Tiger Woods tenía rutinas de concentración de 20 segundos exactos"},
+  {n:60,sym:"Ru",name:"Rutina",cat:"mental",col:14,row:5,desc:"La secuencia previa al golpe. El ancla mental del jugador.",fact:"Los pros tardan exactamente el mismo tiempo en cada golpe"},
+  {n:61,sym:"Vi",name:"Visualización",cat:"mental",col:15,row:5,desc:"Ver el golpe antes de ejecutarlo. La herramienta de los campeones.",fact:"Jack Nicklaus nunca golpeó sin visualizar el trayecto completo"},
+  {n:62,sym:"Pz",name:"Presión",cat:"mental",col:16,row:5,desc:"El 18º hoyo con un golpe de ventaja. Aquí se decide todo.",fact:"Más opciones bajo presión = peor decisión. Simplifica siempre"},
+  {n:63,sym:"Cn",name:"Confianza",cat:"mental",col:17,row:5,desc:"La certeza antes de golpear. El arma más poderosa del golf.",fact:"Seve Ballesteros: 'La confianza es mi palo favorito'"},
+  {n:64,sym:"Ge",name:"Gestión",cat:"mental",col:18,row:5,desc:"El golf de cabeza. Saber cuándo atacar y cuándo conservar.",fact:"La gestión inteligente vale hasta 5 golpes por ronda"},
+  {n:65,sym:"Mj",name:"Major",cat:"tour",col:1,row:6,desc:"Los cuatro torneos más grandes: Masters, US Open, The Open, PGA Champ.",fact:"Solo 5 jugadores han ganado el Grand Slam de por vida"},
+  {n:66,sym:"Rc",name:"Ryder Cup",cat:"tour",col:2,row:6,desc:"Europa vs EEUU. El evento de golf más emocionante del mundo.",fact:"Se juega desde 1927. Europa lidera el cómputo moderno"},
+  {n:67,sym:"Ma",name:"Masters",cat:"tour",col:3,row:6,desc:"Augusta en abril. La chaqueta verde. El sueño máximo.",fact:"Solo los ganadores y miembros del club pueden comer en Augusta"},
+  {n:68,sym:"Wr",name:"World Ranking",cat:"tour",col:4,row:6,desc:"El sistema de clasificación mundial del golf profesional.",fact:"El n°1 ha cambiado de manos 22 veces desde que existe el ranking"},
+  {n:69,sym:"Pg",name:"PGA Tour",cat:"tour",col:5,row:6,desc:"La élite del golf masculino. El circo semanal del talento mundial.",fact:"El prize money total del PGA Tour supera los 500 millones al año"},
+  {n:70,sym:"Dv",name:"DP World Tour",cat:"tour",col:6,row:6,desc:"El tour europeo. La cuna del juego y la cantera de la Ryder.",fact:"Antes llamado European Tour, renombrado en 2022"},
+  {n:71,sym:"Lv",name:"LIV Golf",cat:"tour",col:7,row:6,desc:"El tour de capital saudí que dividió el golf moderno.",fact:"Fundado en 2022 con 250 millones de dólares de prize money"},
+  {n:72,sym:"Hf",name:"Hall of Fame",cat:"tour",col:8,row:6,desc:"El olimpo del golf. Nicklaus, Hogan, Player, Sorenstam, Woods.",fact:"El World Golf Hall of Fame existe desde 1974 en St Augustine, Florida"},
+];
+
+const catColors = { shots:'cat-shots', equip:'cat-equip', campo:'cat-campo', score:'cat-score', jugador:'cat-jugador', rules:'cat-rules', mental:'cat-mental', tour:'cat-tour' };
+const catNames = { shots:'Golpes', equip:'Equipamiento', campo:'Campo', score:'Puntuación', jugador:'Jugador', rules:'Reglas', mental:'Mental', tour:'Tour' };
+const catOrder = ['score','shots','campo','equip','jugador','rules','mental','tour'];
+
+// DESKTOP
+const gd = document.getElementById('grid-desktop');
+for (let r = 1; r <= 6; r++) {
+  for (let c = 1; c <= 18; c++) {
+    const el = elements.find(e => e.row === r && e.col === c);
+    const div = document.createElement('div');
+    div.className = 'cell ' + (el ? catColors[el.cat] : 'empty');
+    if (el) {
+      div.innerHTML = `<span class="num">${el.n}</span><span class="sym">${el.sym}</span><span class="name">${el.name}</span>`;
+      div.onclick = () => openModal(el);
+    } else { div.innerHTML = '&nbsp;'; }
+    gd.appendChild(div);
+  }
+}
+
+// MÓVIL
+const mv = document.getElementById('mobile-view');
+catOrder.forEach(cat => {
+  const catEls = elements.filter(e => e.cat === cat).sort((a,b) => a.n - b.n);
+  const section = document.createElement('div');
+  section.className = 'cat-section';
+  const title = document.createElement('div');
+  title.className = `cat-title title-${cat}`;
+  title.textContent = catNames[cat];
+  section.appendChild(title);
+  const mgrid = document.createElement('div');
+  mgrid.className = 'mobile-grid';
+  catEls.forEach(el => {
+    const div = document.createElement('div');
+    div.className = `mobile-cell ${catColors[el.cat]}`;
+    div.innerHTML = `<span class="num">${el.n}</span><span class="sym">${el.sym}</span><span class="name">${el.name}</span>`;
+    div.onclick = () => openModal(el);
+    mgrid.appendChild(div);
+  });
+  section.appendChild(mgrid);
+  mv.appendChild(section);
+});
+
+function openModal(el) {
+  document.getElementById('mSym').textContent = el.sym;
+  document.getElementById('mName').textContent = el.name;
+  document.getElementById('mCat').textContent = catNames[el.cat] + '  ·  Elemento #' + el.n;
+  document.getElementById('mDesc').textContent = el.desc;
+  document.getElementById('mFact').innerHTML = '<span>Dato:</span> ' + el.fact;
+  document.getElementById('overlay').classList.add('open');
+}
+document.getElementById('closeBtn').onclick = () => document.getElementById('overlay').classList.remove('open');
+document.getElementById('overlay').onclick = (e) => { if (e.target === document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); };
+</script>
+</body>
+</html>
